@@ -1,0 +1,15 @@
+RemoteHome KEYWORD1
+reset KEYWORD2
+manageSerialEvent KEYWORD2
+setup KEYWORD2
+sendRadioData KEYWORD2
+manageSerialEvent KEYWORD2
+sendOK KEYWORD2
+sendERROR KEYWORD2
+printOK KEYWORD2
+printERROR KEYWORD2
+clearEEPROM KEYWORD2
+manageReceivedData KEYWORD2
+processCommonRadioData KEYWORD2
+readVcc KEYWORD2
+inputRadioData KEYWORD2
