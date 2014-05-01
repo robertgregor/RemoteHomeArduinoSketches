@@ -26,7 +26,7 @@ class RemoteHome {
 	~RemoteHome();
 	void reset();
 	void setup();
-	void setup(int nodeId);
+	void setup(int nodeId, boolean overrideEEPROM);
 	boolean sendRadioData();
 	boolean sendRadioData(int destinationId);
 	void manageSerialEvent(HardwareSerial &_ser);

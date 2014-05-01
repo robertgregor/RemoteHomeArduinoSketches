@@ -36,14 +36,15 @@ void RemoteHome::reset() {
   while(1);    
 }
 void RemoteHome::setup() {
-  setup(1);
+  setup(1,false);
 }
-void RemoteHome::setup(int node) {
+void RemoteHome::setup(int node,boolean overrideEEPROM) {
   wdt_disable();
   delay(400); //needs to be there to stabilise power supply before the radio module is initialized.
   wdt_enable(WDTO_4S);
   nodeId = EEPROM.read(EEPROM_POSITION_NODE_ID);
   if (nodeId == 255) nodeId = node;
+  if (overrideEEPROM) nodeId = node;
   networkId = EEPROM.read(EEPROM_POSITION_NETWORK_ID);
   if (networkId == 255) networkId = 1;	
   if (EEPROM.read(EEPROM_POSITION_KEY) != 255) {

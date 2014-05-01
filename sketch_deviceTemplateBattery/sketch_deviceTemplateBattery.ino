@@ -23,7 +23,7 @@ void setup() {
   period = EEPROM.read(EEPROM_SENDING_STATUS_PERIOD);
   if (period == 255) period = 0;
   delay(100);
-  
+  previousMillis = millis();
 }
 
 void loop() {

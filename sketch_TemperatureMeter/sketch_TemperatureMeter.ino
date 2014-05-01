@@ -60,6 +60,7 @@ EEPROM_THERMOSTAT_SUBDEVICE_ID 20 //Thermostat subdevice Id, where to send the t
 #define EEPROM_THERMOSTAT_ID 19 //Thermostat Id, where to send the temperature
 #define EEPROM_THERMOSTAT_SUBDEVICE_ID 20 //Thermostat Id, where to send the temperature
 #define ALIVE_AFTER_STARTUP 60000 //How long after startup the module should go to sleep period.
+#define WAIT_BEFORE_SLEEP 100 //How long after startup the module should be up before it will go to sleep again.
 #define TEMP_SENSOR_POWER 6
 
 RemoteHome remoteHome;
@@ -126,6 +127,7 @@ void loop() {
   }
   //check and manage radio
   if (remoteHome.processCommonRadioData()) {
+    previousMillis = millis();
     if ((char)remoteHome.radio.DATA[0] == 's') {
       remoteHome.manageReceivedData();
       String status = getStatus();
@@ -152,7 +154,7 @@ void loop() {
           num = num + (char)remoteHome.radio.DATA[i];
       }
       int recvNum = num.toInt();
-      if ((recvNum > 0) && (recvNum < 255)) {
+      if ((recvNum >= 0) && (recvNum < 255)) {
         thermostatId = recvNum;
         EEPROM.write(EEPROM_THERMOSTAT_ID, thermostatId);
         remoteHome.sendOK();        
@@ -179,7 +181,7 @@ void loop() {
     remoteHome.manageReceivedData();
   }
   if ((period != 0) && (((unsigned long)(millis() - previousMillis)) >= interval)) {
-    if (interval == ALIVE_AFTER_STARTUP) interval = 200; //OK it is after start, after start it is running 1 minute. After that, it is running 200 ms and then sleep again
+    if (interval == ALIVE_AFTER_STARTUP) interval = WAIT_BEFORE_SLEEP; //OK it is after start, after start it is running 1 minute. After that, it is running 100 ms and then sleep again
     sleepTimer = 0;
     while (1) {
       remoteHome.radio.sleep();
@@ -188,17 +190,17 @@ void loop() {
       LowPower.powerDown(SLEEP_2S, ADC_OFF, BOD_OFF);
       wdt_enable(WDTO_2S);
       if ((period) == (++sleepTimer)) {
+        //send to thermostat
+        if (thermostatId > 0) {
+          String status = getThermostatData();
+          remoteHome.len = status.length();
+          status.toCharArray(remoteHome.buff, remoteHome.len+1); 
+          remoteHome.sendRadioData(thermostatId);
+        }               
         String status = getStatus();
         remoteHome.len = status.length();
         status.toCharArray(remoteHome.buff, remoteHome.len+1); 
         remoteHome.sendRadioData();
-        //send to thermostat
-        if (thermostatId > 0) {
-          status = getThermostatData();
-          remoteHome.len = status.length();
-          status.toCharArray(remoteHome.buff, remoteHome.len+1); 
-          remoteHome.sendRadioData(thermostatId);
-        }
         previousMillis = millis();
         break; //returns to the main loop
       }

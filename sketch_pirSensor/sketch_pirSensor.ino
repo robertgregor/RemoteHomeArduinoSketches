@@ -3,11 +3,11 @@ Magnetic sensor sketch
 
 Radio commands (Works only 1st minutes after the power on, if interval is not 0). Please be sure to set the interval, othervise the unit doesn't switch to sleep mode and the battery will be exhausted quickly.
 
-s - return status 4|frequency|battery|enabled|state
+s - return status 3|frequency|battery|enabled|state
 	frequency - frequency in seconds to send status. Longer value, longer battery life
 	battery voltage e.g. 2.9 or 3.0
-        enabled - if enabled asynchronous messages ENABLED / DISABLED are sent. 0 - disabed, 1 - enabled
-        state - 0 = open, 1 = closed
+        enabled - if enabled asynchronous message MOTION is sent, if the motion is detected. 0 - means, that this feature is disabled, 1 means that this feature is enabled. If 0, it is saving battery
+        state - 0 = no movement, 1 = movement
 m=nnn - set the frequency and put to the sleep mode. 1 means 10 seconds, 254 means 2540 seconds. Needs to be set to put the device to sleep mode!!!
 	If not set, or set to 0, then no sleep - usefull for testing, but consume lot of power and batery will be quicly empty.
 en - enable the sensor
@@ -60,7 +60,7 @@ byte period = 0;
 int sleepTimer = 0;
 unsigned long previousMillis=0;
 byte enabled = 0;
-byte motionDetected=0; 
+boolean processingRadio=false;
 
 void setup() {
   // initialize serial
@@ -72,7 +72,7 @@ void setup() {
   enabled = EEPROM.read(EEPROM_SENSOR_ENABLED_FLAG);
   if (enabled == 255) enabled = 0;
   pinMode(INPUTPIN, INPUT);
-  attachInterrupt(MOTIONINT, motionIRQ, CHANGE);
+  attachInterrupt(MOTIONINT, motionIRQ, RISING);
   delay(100);
   previousMillis = millis();
 }
@@ -111,6 +111,7 @@ void loop() {
     remoteHome.stringComplete = false;
   }
   //check and manage radio
+  processingRadio = true;
   if (remoteHome.processCommonRadioData()) {
     if ((char)remoteHome.radio.DATA[0] == 's') {
       remoteHome.manageReceivedData();
@@ -139,20 +140,25 @@ void loop() {
     }
     remoteHome.manageReceivedData();
   }
+  processingRadio = false;
   if ((period != 0) && (((unsigned long)(millis() - previousMillis)) >= interval)) {
     if (interval == ALIVE_AFTER_STARTUP) interval = 200; //OK it is after start, after start it is running 1 minute. After that, it is running 200 ms and then sleep again
     sleepTimer = 0;
     while (1) {
+      processingRadio = true;
       remoteHome.radio.sleep();
+      processingRadio = false;
       wdt_disable();
       LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
       LowPower.powerDown(SLEEP_2S, ADC_OFF, BOD_OFF);
       wdt_enable(WDTO_4S);
       if ((period) == (++sleepTimer)) {
+        processingRadio = true;
         String status = getStatus();
         remoteHome.len = status.length();
         status.toCharArray(remoteHome.buff, remoteHome.len+1);       
         remoteHome.sendRadioData();
+        processingRadio = false;
         previousMillis = millis();
         break; //returns to the main loop
       }
@@ -166,35 +172,20 @@ void serialEvent() {
 String getStatus() {
         //Send sensor status
         int bat = remoteHome.readVcc();
-        return "4|" + String(period*10, DEC) + "|" + String(bat / 10, DEC) + "." + String(bat % 10, DEC) + "|" + String(enabled, DEC) + "|" + String(digitalRead(INPUTPIN), DEC);
+        return "3|" + String(period*10, DEC) + "|" + String(bat / 10, DEC) + "." + String(bat % 10, DEC) + "|" + String(enabled, DEC) + "|" + String(digitalRead(INPUTPIN), DEC);
 }
 void motionIRQ() {
        wdt_enable(WDTO_4S);  
-       byte motion = digitalRead(INPUTPIN) + 1;
-       if ((enabled == 1) && (motion != motionDetected)) {
-       motionDetected = motion;
-        if (motionDetected == 1) {
-          //Open
-          remoteHome.buff[0] = 'O';
-          remoteHome.buff[1] = 'P';
-          remoteHome.buff[2] = 'E';
-          remoteHome.buff[3] = 'N';
-          remoteHome.buff[4] = 'E';
-          remoteHome.buff[5] = 'D';
+       if ((enabled == 1) && !processingRadio) {
+          remoteHome.buff[0] = 'M';
+          remoteHome.buff[1] = 'O';
+          remoteHome.buff[2] = 'T';
+          remoteHome.buff[3] = 'I';
+          remoteHome.buff[4] = 'O';
+          remoteHome.buff[5] = 'N';
           remoteHome.len = 6;
-          Serial.println("OPENED");
-        } else if (motionDetected == 2) {
-          //Close
-          remoteHome.buff[0] = 'C';
-          remoteHome.buff[1] = 'L';
-          remoteHome.buff[2] = 'O';
-          remoteHome.buff[3] = 'S';
-          remoteHome.buff[4] = 'E';
-          remoteHome.buff[5] = 'D';
-          remoteHome.len = 6;
-          Serial.println("CLOSED");
-        }
-        remoteHome.sendRadioData();
-        previousMillis = millis() + interval;
+          Serial.println("MOTION");
+          remoteHome.sendRadioData();
+          previousMillis = millis() + interval;
        }
 }

@@ -36,7 +36,7 @@ void setup() {
   // initialize serial
   Serial.begin(115200);
   Serial.println("Started");
-  remoteHome.setup(255);
+  remoteHome.setup(255,true);
   delay(100);
 }
 
@@ -94,6 +94,7 @@ void loop() {
      }
      Serial.println();
      remoteHome.manageReceivedData();
+     remoteHome.inputRadioData = "";
   }
 }
 void serialEvent() {

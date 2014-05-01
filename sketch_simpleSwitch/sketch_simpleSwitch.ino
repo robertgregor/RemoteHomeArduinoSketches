@@ -28,7 +28,7 @@ Thermostat commands
 txcu=nn.nn - receive current temperature from temperature sensor nn.nn is the float
 txcte=nnn - configure expected temperature. Should be in form float, decimal character is ".", e.g. 21.5
 txctt=nnn - configure threshold. Should be 0 < nnn < 9. If the expected temperature is e.g. 21 and threshold is 2, then the switch is on, when the current temperature is bellow 20.8 and will switch off, when it is higher than 21.2
-txch=nnn - configure heating device Id. If there is a device, which needs to be switched on ( e.g. heating unit ), then configure it. This value is common for all the switches on the same board. nnn = 1 to 254
+txch=nnn - configure heating device Id. If there is a device, which needs to be switched on ( e.g. heating unit ), then configure it. This value is common for all the switches on the same board. nnn = 0 to 254. 0 means no heating device Id.
 txcs=nnn - configure heating sub device Id. If there is a device, which needs to be switched on ( e.g. heating unit ), then configure it. If there is a subdevice board to control more outputs configure subdevice Id. nnn = 1 to 8
 txs - return status 1t|thermostatID|status|currentTemperature|ExpectedTemperature|Threshold|HeatingDeviceId|HeatingDeviceSubdeviceId
         thermostatID - number of thermostat ( It is in fact value x )
@@ -299,7 +299,7 @@ void processInputTemperatureData() {
               }            
           } else if (((char)remoteHome.radio.DATA[3] == 'h') && ((char)remoteHome.radio.DATA[4] == '=')) {
               int t = remoteHome.inputRadioData.substring(5).toInt();
-              if ((t>0) && (t<255)) {
+              if ((t>=0) && (t<255)) {
                 heatingSourceId = t;
                 EEPROM.write(HEATING_SOURCE_ID, t);
                 remoteHome.sendOK();
@@ -347,6 +347,7 @@ void processInputLightData() {
           }
         } else if ((char)remoteHome.radio.DATA[2] == 'f') {
           digitalWrite(pins[sw-1], LOW);
+          currentCounterValues[sw-1] = 0;
           remoteHome.sendOK();
         } else if ((char)remoteHome.radio.DATA[2] == 's') {
           String status = getSwitchStatus(sw);
@@ -363,7 +364,7 @@ void processInputLightData() {
             remoteHome.sendOK();
           } else if (((char)remoteHome.radio.DATA[3] == 'm') && ((char)remoteHome.radio.DATA[4] == '=')) {
               int t = remoteHome.inputRadioData.substring(5).toInt();
-              if ((t>0) && (t<256)) {
+              if ((t>=0) && (t<256)) {
                 counterValues[sw-1] = t*60;
                 EEPROM.write(PIN_COUNTER + (sw - 1), t);
                 remoteHome.sendOK();
