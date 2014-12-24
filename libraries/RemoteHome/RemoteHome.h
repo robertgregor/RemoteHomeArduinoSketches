@@ -3,10 +3,10 @@
 #include <Arduino.h>
 #include <RFM69.h>
 
-#define FREQUENCY RF69_433MHZ //Match this with the version of your Moteino! (others: RF69_433MHZ, RF69_868MHZ)
-#define EEPROM_POSITION_NODE_ID 0 //Node Id eeprom position
-#define EEPROM_POSITION_NETWORK_ID 1 //Node Id eeprom position
-#define EEPROM_POSITION_KEY 2 //Node Id eeprom position
+#define FREQUENCY RF69_433MHZ
+#define EEPROM_POSITION_NODE_ID 1006 //Node Id eeprom position
+#define EEPROM_POSITION_NETWORK_ID 1007 //Channel Id eeprom position
+#define EEPROM_POSITION_KEY 1008 //Node Id eeprom position
 
 
 class RemoteHome {

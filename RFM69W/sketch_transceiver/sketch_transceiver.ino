@@ -12,15 +12,16 @@ at+res Reset the device
 at+def Reset the device and set the factory default values of EEPROM
 at+memid=XXX To set the eeprom value. This command preset the address
 at+memval=XXX This command set the XXX value at the position memid in the EEPROM
-at+s Returns status. Example: +Device ID:255<TAB character>Channel:5<TAB character>Password:LukiKukiBuki0103<TAB character>Device type:Transceiver
+at+s Returns status. Example: +Device ID:255<TAB character>Channel:5<TAB character>Password:thisIsPassword12<TAB character>Device type:Transceiver
 
 Asynchronous commands:
 +XXX data - XXX device ID.
 
 EEPROM bank
-EEPROM_POSITION_NODE_ID 0 //Node Id eeprom position
-EEPROM_POSITION_NETWORK_ID 1 //Node Id eeprom position
-EEPROM_POSITION_KEY 2 //Node Id eeprom position
+EEPROM_POSITION_NODE_ID 1006 //Node Id eeprom position
+EEPROM_POSITION_NETWORK_ID 1007 //Node Id eeprom position
+EEPROM_POSITION_KEY 1008 //Node Id eeprom position
+
 */
 
 #include <EEPROM.h>
